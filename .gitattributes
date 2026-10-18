@@ -1,0 +1,74 @@
+* text=auto eol=lf
+
+# Keep Windows command files in their native line-ending format.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.sln text eol=crlf
+
+# Keep common source and project-definition files consistently diffable.
+*.cs text eol=lf
+*.csx text eol=lf
+*.csproj text eol=lf
+*.props text eol=lf
+*.targets text eol=lf
+*.json text eol=lf
+*.jsonc text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.xml text eol=lf
+*.md text eol=lf
+*.editorconfig text eol=lf
+*.gitattributes text eol=lf
+
+# Unity serializes these project assets as text; preserve useful diffs.
+*.unity text eol=lf
+*.prefab text eol=lf
+*.asset text eol=lf
+*.meta text eol=lf
+*.mat text eol=lf
+*.anim text eol=lf
+*.controller text eol=lf
+*.physicMaterial text eol=lf
+*.renderTexture text eol=lf
+
+# Keep image, audio, video, database, and native DCC assets byte-for-byte.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.bmp binary
+*.tif binary
+*.tiff binary
+*.psd binary
+*.psb binary
+*.kra binary
+*.ora binary
+*.xcf binary
+*.exr binary
+*.hdr binary
+*.dds binary
+*.ktx binary
+*.ktx2 binary
+*.pdf binary
+*.mp3 binary
+*.wav binary
+*.flac binary
+*.ogg binary
+*.mp4 binary
+*.mov binary
+*.webm binary
+*.blend binary
+*.blend1 binary
+*.fbx binary
+*.glb binary
+*.stl binary
+*.ply binary
+*.abc binary
+*.usd binary
+*.usdc binary
+*.sqlite binary
+*.sqlite3 binary
+*.db binary
+*.dll binary
+*.exe binary
