@@ -1,0 +1,10 @@
+id = "panel.3"
+kind = "panel"
+scope = "panel"
+schemaVersion = 1
+references = ["story", "character.protagonist"]
+
+[content]
+staging = "少女が瓶を胸に抱き、遠くを見る。"
+dialogue = "この海を、知っている気がする。"
+mood = "小さな決意"

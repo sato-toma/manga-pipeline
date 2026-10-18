@@ -1,0 +1,9 @@
+id = "world"
+kind = "world"
+scope = "project"
+schemaVersion = 1
+references = []
+
+[content]
+title = "あめつぶ書店"
+rule = "雨の降らない町では、人々は瓶詰めの雨の記憶を買う。"
