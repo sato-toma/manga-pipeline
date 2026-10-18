@@ -42,6 +42,9 @@
 *.tiff binary
 *.psd binary
 *.psb binary
+*.clip binary
+*.cmc binary
+*.lip binary
 *.kra binary
 *.ora binary
 *.xcf binary
