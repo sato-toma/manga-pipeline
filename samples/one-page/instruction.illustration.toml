@@ -1,0 +1,10 @@
+id = "instruction.illustration"
+kind = "instruction-set"
+scope = "project"
+schemaVersion = 1
+references = []
+
+[content]
+name = "雨の記憶"
+version = 1
+directives = ["余白を残す", "感情は視線と手元で見せる"]

@@ -1,0 +1,10 @@
+id = "page.1"
+kind = "page"
+scope = "page"
+schemaVersion = 1
+references = ["story", "panel.1", "panel.2", "panel.3"]
+
+[content]
+pageNumber = 1
+panelIds = ["panel.1", "panel.2", "panel.3"]
+layout = "vertical"

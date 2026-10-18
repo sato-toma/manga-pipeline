@@ -1,0 +1,10 @@
+id = "panel.1"
+kind = "panel"
+scope = "panel"
+schemaVersion = 1
+references = ["story", "character.protagonist"]
+
+[content]
+staging = "少女が店先で雨の記憶の瓶を並べる。"
+dialogue = "今日の雨は、少しだけ海の匂いがします。"
+mood = "静かな違和感"

@@ -1,0 +1,10 @@
+id = "character.protagonist"
+kind = "character"
+scope = "story"
+schemaVersion = 1
+references = ["world"]
+
+[content]
+name = "ミナ"
+desire = "海の雨の記憶を届ける"
+motivation = "祖母が忘れた海の音を取り戻したい"

@@ -1,0 +1,33 @@
+id = "graph"
+kind = "generation-graph"
+scope = "project"
+schemaVersion = 1
+references = []
+
+[[content.nodes]]
+id = "background"
+kind = "background"
+version = 1
+inputDocumentIds = ["world", "instruction.illustration"]
+dependsOnNodeIds = []
+
+[[content.nodes]]
+id = "character"
+kind = "character"
+version = 1
+inputDocumentIds = ["character.protagonist", "instruction.illustration"]
+dependsOnNodeIds = []
+
+[[content.nodes]]
+id = "panel-script"
+kind = "panel-script"
+version = 1
+inputDocumentIds = ["story", "panel.1"]
+dependsOnNodeIds = ["character"]
+
+[[content.nodes]]
+id = "composition"
+kind = "composition"
+version = 1
+inputDocumentIds = ["page.1"]
+dependsOnNodeIds = ["background", "character", "panel-script"]

@@ -1,0 +1,10 @@
+id = "panel.2"
+kind = "panel"
+scope = "panel"
+schemaVersion = 1
+references = ["story"]
+
+[content]
+staging = "瓶の中に、見知らぬ波打ち際が映る。"
+dialogue = ""
+mood = "発見"
