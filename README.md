@@ -36,3 +36,5 @@ APIは `src/MangaPipeline.Api/appsettings.json` の `MangaPipeline:Urls` を既�
 - 実行計測: 定義読込・依存解決等の準備時間、モック生成時間、成果物保存時間、入力バイト数、キャッシュ利用をジョブレポートに記録します。
 
 実際の画像生成モデル、AIによる自由文の変更案作成、モバイルクライアント側のオフライン編集・同期、リモート認証は未実装です。APIをLANやインターネットへ公開しないでください。
+
+公開する場合は、先に [`PRE_RELEASE_CHECKLIST.md`](./PRE_RELEASE_CHECKLIST.md) の必須項目を完了してください。

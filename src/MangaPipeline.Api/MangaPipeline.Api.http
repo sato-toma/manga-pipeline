@@ -1,0 +1,6 @@
+@MangaPipeline.Api_HostAddress = http://127.0.0.1:5078
+
+GET {{MangaPipeline.Api_HostAddress}}/health
+Accept: application/json
+
+###
