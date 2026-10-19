@@ -39,6 +39,37 @@ public sealed class BackendMvpTests
     }
 
     [Fact]
+    public async Task ProjectCanBeCreatedFromCallerProvidedDocuments()
+    {
+        await using var fixture = await WorkspaceFixture.CreateAsync();
+        var project = await fixture.Workspace.CreateProjectAsync("Custom project", fixture.Documents);
+        var revision = await fixture.Workspace.GetRevisionAsync(project.Id, project.BranchHeads["main"]);
+        var world = await fixture.Workspace.GetDocumentAsync(project.Id, revision.Id, "world");
+
+        Assert.Equal("Custom project", project.Name);
+        Assert.Equal("Initial project", revision.Reason);
+        Assert.Equal(fixture.Documents.Count, revision.DocumentHashes.Count);
+        Assert.Equal("あめつぶ書店", world.Content["title"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public async Task InvalidProjectDefinitionsAreRejectedBeforeCreatingProjectFiles()
+    {
+        await using var fixture = await WorkspaceFixture.CreateAsync();
+        var invalidDocuments = fixture.Documents
+            .Select(document => document.Id == "world"
+                ? document with { References = ["missing-document"] }
+                : document)
+            .ToList();
+
+        var error = await Assert.ThrowsAsync<WorkspaceException>(() =>
+            fixture.Workspace.CreateProjectAsync("Invalid project", invalidDocuments));
+
+        Assert.Equal(WorkspaceErrorCode.Validation, error.Code);
+        Assert.False(Directory.Exists(Path.Combine(fixture.Projects.Root, "projects")));
+    }
+
+    [Fact]
     public async Task CharacterChangeReusesBackgroundAndInvalidatesOnlyDependents()
     {
         await using var fixture = await WorkspaceFixture.CreateAsync();

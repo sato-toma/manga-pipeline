@@ -31,7 +31,13 @@ public sealed class WorkspaceService(
         string name,
         IReadOnlyCollection<DocumentDefinition> documents,
         CancellationToken cancellationToken = default) =>
-        projects.CreateSampleProjectAsync(name, documents, cancellationToken);
+        CreateProjectAsync(name, documents, cancellationToken);
+
+    public Task<ProjectManifest> CreateProjectAsync(
+        string name,
+        IReadOnlyCollection<DocumentDefinition> documents,
+        CancellationToken cancellationToken = default) =>
+        projects.CreateProjectAsync(name, documents, cancellationToken);
 
     public Task<ProjectManifest> GetProjectAsync(string projectId, CancellationToken cancellationToken = default) =>
         projects.GetProjectAsync(projectId, cancellationToken);

@@ -25,7 +25,13 @@ public sealed class LocalProjectStore
 
     public string Root => _root;
 
-    public async Task<ProjectManifest> CreateSampleProjectAsync(
+    public Task<ProjectManifest> CreateSampleProjectAsync(
+        string name,
+        IReadOnlyCollection<DocumentDefinition> documents,
+        CancellationToken cancellationToken = default) =>
+        CreateProjectAsync(name, documents, cancellationToken);
+
+    public async Task<ProjectManifest> CreateProjectAsync(
         string name,
         IReadOnlyCollection<DocumentDefinition> documents,
         CancellationToken cancellationToken = default)
@@ -37,9 +43,9 @@ public sealed class LocalProjectStore
 
         var projectId = Guid.NewGuid().ToString("N");
         var projectRoot = ProjectPath(projectId);
+        DefinitionValidator.Validate(documents.ToList());
         Directory.CreateDirectory(projectRoot);
 
-        DefinitionValidator.Validate(documents.ToList());
         var documentHashes = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var document in documents)
         {
@@ -65,7 +71,7 @@ public sealed class LocalProjectStore
             null,
             null,
             "author",
-            "Initial sample project",
+            "Initial project",
             now,
             documentHashes,
             JsonSupport.Hash(documentHashes));

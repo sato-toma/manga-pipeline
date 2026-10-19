@@ -77,8 +77,9 @@ app.MapPost(
     "/api/projects",
     async (CreateProjectRequest request, WorkspaceService workspace, CancellationToken cancellationToken) =>
     {
-        var sampleDocuments = await SampleProjectLoader.LoadAsync(sampleDirectory, cancellationToken);
-        var project = await workspace.CreateSampleProjectAsync(request.Name, sampleDocuments, cancellationToken);
+        var documents = request.Documents
+            ?? await SampleProjectLoader.LoadAsync(sampleDirectory, cancellationToken);
+        var project = await workspace.CreateProjectAsync(request.Name, documents, cancellationToken);
         return Results.Created($"/api/projects/{project.Id}", project);
     });
 
