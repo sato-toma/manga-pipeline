@@ -3,7 +3,13 @@ using MangaPipeline.Core;
 
 namespace MangaPipeline.Api;
 
-public sealed record CreateProjectRequest(string Name);
+public sealed record CreateProjectRequest(string Name, List<DocumentDefinition>? Documents = null);
+
+public sealed record CreateConceptCandidateRequest(
+    List<ConceptCandidateElement> Elements,
+    List<ConceptCandidateRelation> Relations,
+    List<string> OpenQuestions,
+    string Actor);
 
 public sealed record CreateBranchRequest(string Id, string Name, string ParentRevisionId, string Actor);
 

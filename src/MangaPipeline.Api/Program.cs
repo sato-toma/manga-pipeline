@@ -77,13 +77,48 @@ app.MapPost(
     "/api/projects",
     async (CreateProjectRequest request, WorkspaceService workspace, CancellationToken cancellationToken) =>
     {
-        var sampleDocuments = await SampleProjectLoader.LoadAsync(sampleDirectory, cancellationToken);
-        var project = await workspace.CreateSampleProjectAsync(request.Name, sampleDocuments, cancellationToken);
+        var documents = request.Documents
+            ?? await SampleProjectLoader.LoadAsync(sampleDirectory, cancellationToken);
+        var project = await workspace.CreateProjectAsync(request.Name, documents, cancellationToken);
         return Results.Created($"/api/projects/{project.Id}", project);
     });
 
 app.MapGet("/api/projects/{projectId}", async (string projectId, WorkspaceService workspace, CancellationToken cancellationToken) =>
     Results.Ok(await workspace.GetProjectAsync(projectId, cancellationToken)));
+
+app.MapPost(
+    "/api/projects/{projectId}/concept-candidates",
+    async (
+        string projectId,
+        CreateConceptCandidateRequest request,
+        WorkspaceService workspace,
+        CancellationToken cancellationToken) =>
+    {
+        var candidate = await workspace.CreateConceptCandidateAsync(
+            projectId,
+            request.Elements,
+            request.Relations,
+            request.OpenQuestions,
+            request.Actor,
+            cancellationToken);
+        return Results.Created(
+            $"/api/projects/{projectId}/concept-candidates/{candidate.Id}",
+            candidate);
+    });
+
+app.MapGet(
+    "/api/projects/{projectId}/concept-candidates",
+    async (string projectId, WorkspaceService workspace, CancellationToken cancellationToken) =>
+        Results.Ok(await workspace.ListConceptCandidatesAsync(projectId, cancellationToken)));
+
+app.MapGet(
+    "/api/projects/{projectId}/concept-candidates/{candidateId}",
+    async (
+        string projectId,
+        string candidateId,
+        WorkspaceService workspace,
+        CancellationToken cancellationToken) =>
+        Results.Ok(await workspace.GetConceptCandidateAsync(projectId, candidateId, cancellationToken)));
 
 app.MapGet(
     "/api/projects/{projectId}/revisions",

@@ -31,7 +31,13 @@ public sealed class WorkspaceService(
         string name,
         IReadOnlyCollection<DocumentDefinition> documents,
         CancellationToken cancellationToken = default) =>
-        projects.CreateSampleProjectAsync(name, documents, cancellationToken);
+        CreateProjectAsync(name, documents, cancellationToken);
+
+    public Task<ProjectManifest> CreateProjectAsync(
+        string name,
+        IReadOnlyCollection<DocumentDefinition> documents,
+        CancellationToken cancellationToken = default) =>
+        projects.CreateProjectAsync(name, documents, cancellationToken);
 
     public Task<ProjectManifest> GetProjectAsync(string projectId, CancellationToken cancellationToken = default) =>
         projects.GetProjectAsync(projectId, cancellationToken);
@@ -250,6 +256,32 @@ public sealed class WorkspaceService(
         string projectId,
         CancellationToken cancellationToken = default) =>
         projects.ListWorkUnitsAsync(projectId, cancellationToken);
+
+    public Task<ConceptCandidate> CreateConceptCandidateAsync(
+        string projectId,
+        IReadOnlyCollection<ConceptCandidateElement> elements,
+        IReadOnlyCollection<ConceptCandidateRelation> relations,
+        IReadOnlyCollection<string> openQuestions,
+        string actor,
+        CancellationToken cancellationToken = default) =>
+        projects.CreateConceptCandidateAsync(
+            projectId,
+            elements,
+            relations,
+            openQuestions,
+            actor,
+            cancellationToken);
+
+    public Task<ConceptCandidate> GetConceptCandidateAsync(
+        string projectId,
+        string candidateId,
+        CancellationToken cancellationToken = default) =>
+        projects.GetConceptCandidateAsync(projectId, candidateId, cancellationToken);
+
+    public Task<List<ConceptCandidate>> ListConceptCandidatesAsync(
+        string projectId,
+        CancellationToken cancellationToken = default) =>
+        projects.ListConceptCandidatesAsync(projectId, cancellationToken);
 
     public Task<List<ContributionEvent>> ListContributionEventsAsync(
         string projectId,

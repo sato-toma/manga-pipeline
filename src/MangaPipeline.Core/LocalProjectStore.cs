@@ -25,7 +25,13 @@ public sealed class LocalProjectStore
 
     public string Root => _root;
 
-    public async Task<ProjectManifest> CreateSampleProjectAsync(
+    public Task<ProjectManifest> CreateSampleProjectAsync(
+        string name,
+        IReadOnlyCollection<DocumentDefinition> documents,
+        CancellationToken cancellationToken = default) =>
+        CreateProjectAsync(name, documents, cancellationToken);
+
+    public async Task<ProjectManifest> CreateProjectAsync(
         string name,
         IReadOnlyCollection<DocumentDefinition> documents,
         CancellationToken cancellationToken = default)
@@ -37,9 +43,9 @@ public sealed class LocalProjectStore
 
         var projectId = Guid.NewGuid().ToString("N");
         var projectRoot = ProjectPath(projectId);
+        DefinitionValidator.Validate(documents.ToList());
         Directory.CreateDirectory(projectRoot);
 
-        DefinitionValidator.Validate(documents.ToList());
         var documentHashes = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var document in documents)
         {
@@ -65,7 +71,7 @@ public sealed class LocalProjectStore
             null,
             null,
             "author",
-            "Initial sample project",
+            "Initial project",
             now,
             documentHashes,
             JsonSupport.Hash(documentHashes));
@@ -486,6 +492,59 @@ public sealed class LocalProjectStore
         return workUnits.OrderBy(unit => unit.CreatedAt).ToList();
     }
 
+    public async Task<ConceptCandidate> CreateConceptCandidateAsync(
+        string projectId,
+        IReadOnlyCollection<ConceptCandidateElement> elements,
+        IReadOnlyCollection<ConceptCandidateRelation> relations,
+        IReadOnlyCollection<string> openQuestions,
+        string createdBy,
+        CancellationToken cancellationToken = default)
+    {
+        ConceptCandidateValidator.Validate(elements, relations, openQuestions);
+        _ = await GetProjectAsync(projectId, cancellationToken);
+
+        var candidate = new ConceptCandidate(
+            Guid.NewGuid().ToString("N"),
+            projectId,
+            elements.ToList(),
+            relations.ToList(),
+            openQuestions.ToList(),
+            string.IsNullOrWhiteSpace(createdBy) ? "unknown" : createdBy.Trim(),
+            DateTimeOffset.UtcNow);
+        await WriteImmutableAsync(ConceptCandidatePath(projectId, candidate.Id), candidate, cancellationToken);
+        return candidate;
+    }
+
+    public async Task<ConceptCandidate> GetConceptCandidateAsync(
+        string projectId,
+        string candidateId,
+        CancellationToken cancellationToken = default)
+    {
+        _ = await GetProjectAsync(projectId, cancellationToken);
+        return await ReadAsync<ConceptCandidate>(ConceptCandidatePath(projectId, candidateId), cancellationToken);
+    }
+
+    public async Task<List<ConceptCandidate>> ListConceptCandidatesAsync(
+        string projectId,
+        CancellationToken cancellationToken = default)
+    {
+        _ = await GetProjectAsync(projectId, cancellationToken);
+        var directory = ConceptCandidatesPath(projectId);
+        if (!Directory.Exists(directory))
+        {
+            return [];
+        }
+
+        var candidates = new List<ConceptCandidate>();
+        foreach (var path in Directory.EnumerateFiles(directory, "*.json"))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            candidates.Add(await ReadAsync<ConceptCandidate>(path, cancellationToken));
+        }
+
+        return candidates.OrderBy(candidate => candidate.CreatedAt).ToList();
+    }
+
     public async Task WriteContributionEventAsync(
         ContributionEvent contributionEvent,
         CancellationToken cancellationToken = default)
@@ -659,6 +718,10 @@ public sealed class LocalProjectStore
         Path.Combine(ProjectPath(projectId), "changesets", $"{SafeFileId(changeSetId)}.json");
     private string WorkUnitPath(string projectId, string workUnitId) =>
         Path.Combine(ProjectPath(projectId), "work-units", $"{SafeFileId(workUnitId)}.json");
+    private string ConceptCandidatesPath(string projectId) =>
+        Path.Combine(ProjectPath(projectId), "concept-candidates");
+    private string ConceptCandidatePath(string projectId, string candidateId) =>
+        Path.Combine(ConceptCandidatesPath(projectId), $"{SafeFileId(candidateId)}.json");
     private string BranchPath(string projectId, string branchId) =>
         Path.Combine(ProjectPath(projectId), "branches", $"{SafeFileId(branchId)}.json");
     private string DocumentPath(string projectId, string documentId, string hash) =>
