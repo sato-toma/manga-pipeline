@@ -17,6 +17,7 @@
 ```sh
 dotnet build MangaPipeline.slnx
 dotnet run --project src/MangaPipeline.Cli -- validate samples/one-page
+dotnet run --project src/MangaPipeline.Cli -- create "My Manga" path/to/definitions
 dotnet test MangaPipeline.slnx
 dotnet run --project src/MangaPipeline.Api
 ```

@@ -11,11 +11,14 @@
 ```sh
 dotnet build MangaPipeline.slnx
 dotnet run --project src/MangaPipeline.Cli -- validate samples/one-page
+dotnet run --project src/MangaPipeline.Cli -- create "My Manga" path/to/definitions
 dotnet test MangaPipeline.slnx
 dotnet run --project src/MangaPipeline.Api
 ```
 
 APIを起動すると、開発設定ではブラウザーが `/health` を開きます。既定の待受先は `http://127.0.0.1:5078` です。起動URLは `src/MangaPipeline.Api/appsettings.json` の `MangaPipeline:Urls` で設定し、`ASPNETCORE_URLS` で上書きできます。HTTPSの開発プロファイルは `https://localhost:7105` です。
+
+`validate` は指定フォルダー内のTOML定義を検証します。`create` は同じ検証を行った後、それらの定義からローカルプロジェクトと初期リビジョンを作成します。APIと同じデータ領域を使用するには、APIとCLIの両方で同じ `MANGA_PIPELINE_DATA` を設定してください。未設定時はOSのユーザー別アプリケーションデータ内の `MangaPipeline` を使います。
 
 ## 作品を作成する
 
