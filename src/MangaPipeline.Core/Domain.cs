@@ -77,6 +77,26 @@ public sealed record WorkUnitProposal(
     List<ProposedDocumentChange> Changes,
     string? SourceArtifactId = null);
 
+public sealed record ConceptCandidate(
+    string Id,
+    string ProjectId,
+    List<ConceptCandidateElement> Elements,
+    List<ConceptCandidateRelation> Relations,
+    List<string> OpenQuestions,
+    string CreatedBy,
+    DateTimeOffset CreatedAt);
+
+public sealed record ConceptCandidateElement(
+    string Id,
+    string Kind,
+    string Label,
+    string? Description);
+
+public sealed record ConceptCandidateRelation(
+    string FromElementId,
+    string Kind,
+    string ToElementId);
+
 public sealed record GenerationNodeDefinition(
     string Id,
     string Kind,

@@ -86,6 +86,40 @@ app.MapPost(
 app.MapGet("/api/projects/{projectId}", async (string projectId, WorkspaceService workspace, CancellationToken cancellationToken) =>
     Results.Ok(await workspace.GetProjectAsync(projectId, cancellationToken)));
 
+app.MapPost(
+    "/api/projects/{projectId}/concept-candidates",
+    async (
+        string projectId,
+        CreateConceptCandidateRequest request,
+        WorkspaceService workspace,
+        CancellationToken cancellationToken) =>
+    {
+        var candidate = await workspace.CreateConceptCandidateAsync(
+            projectId,
+            request.Elements,
+            request.Relations,
+            request.OpenQuestions,
+            request.Actor,
+            cancellationToken);
+        return Results.Created(
+            $"/api/projects/{projectId}/concept-candidates/{candidate.Id}",
+            candidate);
+    });
+
+app.MapGet(
+    "/api/projects/{projectId}/concept-candidates",
+    async (string projectId, WorkspaceService workspace, CancellationToken cancellationToken) =>
+        Results.Ok(await workspace.ListConceptCandidatesAsync(projectId, cancellationToken)));
+
+app.MapGet(
+    "/api/projects/{projectId}/concept-candidates/{candidateId}",
+    async (
+        string projectId,
+        string candidateId,
+        WorkspaceService workspace,
+        CancellationToken cancellationToken) =>
+        Results.Ok(await workspace.GetConceptCandidateAsync(projectId, candidateId, cancellationToken)));
+
 app.MapGet(
     "/api/projects/{projectId}/revisions",
     async (string projectId, string? branchId, WorkspaceService workspace, CancellationToken cancellationToken) =>

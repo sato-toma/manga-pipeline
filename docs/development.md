@@ -73,6 +73,30 @@ REST APIの入出力はJSONですが、中間定義はTOMLとして保存しま�
 
 基準リビジョンとブランチ先頭が異なる提案は `409 Conflict` として保持されます。過去版の復元も履歴を消さず、新しいリビジョンとして記録されます。
 
+## 漫画向け概念候補を保存する
+
+`POST /api/projects/{id}/concept-candidates` は、作者が確認した概念候補を型付きグラフとして保存します。APIは自由入力や会話ログを受け取りません。LLMからの整理案は作者が確認した後にこのAPIへ渡し、候補を保存しても本編の定義やリビジョンは変更されません。
+
+```json
+{
+  "actor": "author",
+  "elements": [
+    { "id": "seed", "kind": "core-idea", "label": "記憶を売買する古本屋" },
+    { "id": "theme", "kind": "theme", "label": "記憶と自己同一性" },
+    { "id": "book", "kind": "motif", "label": "古い本", "description": "売られた記憶の象徴" }
+  ],
+  "relations": [
+    { "fromElementId": "seed", "kind": "expresses", "toElementId": "theme" },
+    { "fromElementId": "book", "kind": "appears-as", "toElementId": "seed" }
+  ],
+  "openQuestions": ["記憶を失った人物は、何を自分らしさの根拠にするのか？"]
+}
+```
+
+現行の初期語彙は `core-idea`、`theme`、`character`、`setting`、`conflict`、`event`、`scene`、`panel`、`motif` と、`expresses`、`embodies`、`contrasts-with`、`causes`、`occurs-in`、`involves`、`appears-as` です。少なくとも一つの `core-idea` が必要で、関係は存在する要素のみを参照できます。
+
+`GET /api/projects/{id}/concept-candidates` で候補を一覧し、`GET /api/projects/{id}/concept-candidates/{candidateId}` で個別に取得できます。候補は本筋へ自動昇格しません。LLM対話、候補の編集・昇格、生成成果物レビューとの関連付けは未実装です。
+
 ## 保存と生成
 
 - 作業データはOSのユーザー別アプリケーションデータ領域にある `MangaPipeline` に保存します。場所は `MANGA_PIPELINE_DATA` で変更できます。

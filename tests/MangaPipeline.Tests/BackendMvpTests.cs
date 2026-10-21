@@ -70,6 +70,67 @@ public sealed class BackendMvpTests
     }
 
     [Fact]
+    public async Task ConceptCandidateGraphIsStoredSeparatelyFromCanonicalStory()
+    {
+        await using var fixture = await WorkspaceFixture.CreateAsync();
+        var project = await fixture.Workspace.CreateProjectAsync("Concept candidates", fixture.Documents);
+        var revisionId = project.BranchHeads["main"];
+        var originalRevision = await fixture.Workspace.GetRevisionAsync(project.Id, revisionId);
+        var originalStory = await fixture.Workspace.GetDocumentAsync(project.Id, revisionId, "story");
+
+        var candidate = await fixture.Workspace.CreateConceptCandidateAsync(
+            project.Id,
+            [
+                new ConceptCandidateElement("seed", "core-idea", "記憶を売買する古本屋", null),
+                new ConceptCandidateElement("theme", "theme", "記憶と自己同一性", null),
+                new ConceptCandidateElement("book", "motif", "古い本", "売られた記憶の象徴")
+            ],
+            [
+                new ConceptCandidateRelation("seed", "expresses", "theme"),
+                new ConceptCandidateRelation("seed", "appears-as", "book")
+            ],
+            ["記憶を失った人物は、何を自分らしさの根拠にするのか？"],
+            "writer");
+
+        var retrieved = await fixture.Workspace.GetConceptCandidateAsync(project.Id, candidate.Id);
+        var listed = await fixture.Workspace.ListConceptCandidatesAsync(project.Id);
+        var currentProject = await fixture.Workspace.GetProjectAsync(project.Id);
+        var currentRevision = await fixture.Workspace.GetRevisionAsync(project.Id, revisionId);
+        var currentStory = await fixture.Workspace.GetDocumentAsync(project.Id, revisionId, "story");
+
+        Assert.Equal(candidate.Id, retrieved.Id);
+        Assert.Equal(candidate.Elements, retrieved.Elements);
+        Assert.Equal(candidate.Relations, retrieved.Relations);
+        Assert.Equal(candidate.OpenQuestions, retrieved.OpenQuestions);
+        Assert.Equal(candidate.Id, Assert.Single(listed).Id);
+        Assert.Equal("writer", candidate.CreatedBy);
+        Assert.Equal(revisionId, currentProject.BranchHeads["main"]);
+        Assert.Equal(originalRevision.DocumentHashes, currentRevision.DocumentHashes);
+        Assert.Equal(originalStory.Content.ToJsonString(), currentStory.Content.ToJsonString());
+        Assert.DoesNotContain(
+            typeof(ConceptCandidate).GetProperties(),
+            property => property.Name.Contains("Raw", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task ConceptCandidateRejectsRelationsToUnknownElements()
+    {
+        await using var fixture = await WorkspaceFixture.CreateAsync();
+        var project = await fixture.Workspace.CreateProjectAsync("Invalid candidate", fixture.Documents);
+
+        var error = await Assert.ThrowsAsync<WorkspaceException>(() =>
+            fixture.Workspace.CreateConceptCandidateAsync(
+                project.Id,
+                [new ConceptCandidateElement("seed", "core-idea", "A concept", null)],
+                [new ConceptCandidateRelation("seed", "expresses", "missing")],
+                [],
+                "writer"));
+
+        Assert.Equal(WorkspaceErrorCode.Validation, error.Code);
+        Assert.Empty(await fixture.Workspace.ListConceptCandidatesAsync(project.Id));
+    }
+
+    [Fact]
     public async Task CharacterChangeReusesBackgroundAndInvalidatesOnlyDependents()
     {
         await using var fixture = await WorkspaceFixture.CreateAsync();

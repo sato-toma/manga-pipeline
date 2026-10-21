@@ -257,6 +257,32 @@ public sealed class WorkspaceService(
         CancellationToken cancellationToken = default) =>
         projects.ListWorkUnitsAsync(projectId, cancellationToken);
 
+    public Task<ConceptCandidate> CreateConceptCandidateAsync(
+        string projectId,
+        IReadOnlyCollection<ConceptCandidateElement> elements,
+        IReadOnlyCollection<ConceptCandidateRelation> relations,
+        IReadOnlyCollection<string> openQuestions,
+        string actor,
+        CancellationToken cancellationToken = default) =>
+        projects.CreateConceptCandidateAsync(
+            projectId,
+            elements,
+            relations,
+            openQuestions,
+            actor,
+            cancellationToken);
+
+    public Task<ConceptCandidate> GetConceptCandidateAsync(
+        string projectId,
+        string candidateId,
+        CancellationToken cancellationToken = default) =>
+        projects.GetConceptCandidateAsync(projectId, candidateId, cancellationToken);
+
+    public Task<List<ConceptCandidate>> ListConceptCandidatesAsync(
+        string projectId,
+        CancellationToken cancellationToken = default) =>
+        projects.ListConceptCandidatesAsync(projectId, cancellationToken);
+
     public Task<List<ContributionEvent>> ListContributionEventsAsync(
         string projectId,
         CancellationToken cancellationToken = default) =>
