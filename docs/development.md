@@ -20,6 +20,12 @@ APIを起動すると、開発設定ではブラウザーが `/health` を開き
 
 `validate` は指定フォルダー内のTOML定義を検証します。`create` は同じ検証を行った後、それらの定義からローカルプロジェクトと初期リビジョンを作成します。APIと同じデータ領域を使用するには、APIとCLIの両方で同じ `MANGA_PIPELINE_DATA` を設定してください。未設定時はOSのユーザー別アプリケーションデータ内の `MangaPipeline` を使います。
 
+`check-continuity` は、プロジェクト作成前のTOML定義フォルダーを直接照合します。定義中の同じ事実IDに異なる値があれば、競合した定義と値を表示して終了コード `1` を返します。次のコマンドはサンプルの明示設定を照合します。
+
+```sh
+dotnet run --project src/MangaPipeline.Cli -- check-continuity samples/one-page
+```
+
 ## 作品を作成する
 
 `POST /api/projects` に作品名を送ります。`documents` を省略すれば同梱の1ページサンプルを使い、指定すれば独自の定義から作成します。定義群は検証後に初期リビジョンへ保存されます。
@@ -96,6 +102,18 @@ REST APIの入出力はJSONですが、中間定義はTOMLとして保存しま�
 現行の初期語彙は `core-idea`、`theme`、`character`、`setting`、`conflict`、`event`、`scene`、`panel`、`motif` と、`expresses`、`embodies`、`contrasts-with`、`causes`、`occurs-in`、`involves`、`appears-as` です。少なくとも一つの `core-idea` が必要で、関係は存在する要素のみを参照できます。
 
 `GET /api/projects/{id}/concept-candidates` で候補を一覧し、`GET /api/projects/{id}/concept-candidates/{candidateId}` で個別に取得できます。候補は本筋へ自動昇格しません。LLM対話、候補の編集・昇格、生成成果物レビューとの関連付けは未実装です。
+
+## 設定の連続性を確認する
+
+複数の定義にまたがる明示的な設定値は、各ドキュメントの `[content.continuity]` に同じ事実IDで記録できます。たとえば、人物と物語の両方に `"character.mina.name" = "ミナ"` を記録すると、同じ事実IDに異なる値がある場合だけ競合として返します。
+
+```toml
+[content.continuity]
+"character.mina.name" = "ミナ"
+"character.mina.home_town" = "海辺の町"
+```
+
+`GET /api/projects/{id}/revisions/{revisionId}/continuity` は指定リビジョンの文書群を横断して照合し、競合した事実IDとそれぞれの値・出典ドキュメントを返します。これは明示的な値の一致・不一致を検出する機能であり、自由文の意味的な矛盾や重複を推測するものではありません。定義やリビジョンは変更しません。
 
 ## 保存と生成
 

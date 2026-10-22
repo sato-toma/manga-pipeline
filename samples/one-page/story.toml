@@ -7,3 +7,6 @@ references = ["world", "character.protagonist"]
 [content]
 premise = "雨の記憶を売る少女が、誰も覚えていない海の雨を見つける。"
 question = "忘れた悲しみを取り戻すことは救いになるのか？"
+
+[content.continuity]
+"world.rain-in-town" = false

@@ -140,6 +140,11 @@ app.MapGet(
         Results.Ok(await workspace.GetDocumentAsync(projectId, revisionId, documentId, cancellationToken)));
 
 app.MapGet(
+    "/api/projects/{projectId}/revisions/{revisionId}/continuity",
+    async (string projectId, string revisionId, WorkspaceService workspace, CancellationToken cancellationToken) =>
+        Results.Ok(await workspace.AnalyzeContinuityAsync(projectId, revisionId, cancellationToken)));
+
+app.MapGet(
     "/api/projects/{projectId}/diff",
     async (
         string projectId,

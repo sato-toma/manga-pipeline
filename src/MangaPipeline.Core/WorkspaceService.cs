@@ -67,6 +67,21 @@ public sealed class WorkspaceService(
         CancellationToken cancellationToken = default) =>
         projects.GetDocumentAsync(projectId, revisionId, documentId, cancellationToken);
 
+    public async Task<ContinuityCheckReport> AnalyzeContinuityAsync(
+        string projectId,
+        string revisionId,
+        CancellationToken cancellationToken = default)
+    {
+        var revision = await projects.GetRevisionAsync(projectId, revisionId, cancellationToken);
+        var documents = new List<DocumentDefinition>(revision.DocumentHashes.Count);
+        foreach (var documentId in revision.DocumentHashes.Keys.OrderBy(id => id, StringComparer.Ordinal))
+        {
+            documents.Add(await projects.GetDocumentAsync(projectId, revisionId, documentId, cancellationToken));
+        }
+
+        return ContinuityAnalyzer.Analyze(projectId, revisionId, documents);
+    }
+
     public async Task<List<DocumentVersionDiff>> GetRevisionDiffAsync(
         string projectId,
         string fromRevisionId,

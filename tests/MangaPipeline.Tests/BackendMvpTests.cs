@@ -131,6 +131,52 @@ public sealed class BackendMvpTests
     }
 
     [Fact]
+    public async Task ContinuityCheckFindsConflictingExplicitFactsWithoutChangingRevision()
+    {
+        await using var fixture = await WorkspaceFixture.CreateAsync();
+        var documents = fixture.Documents
+            .Select(document => document.Id is "world" or "character.protagonist"
+                ? WithContinuityFact(document, "character.mina.hometown", document.Id == "world" ? "海辺の町" : "山あいの町")
+                : document)
+            .ToList();
+        var project = await fixture.Workspace.CreateProjectAsync("Continuity check", documents);
+        var revisionId = project.BranchHeads["main"];
+
+        var report = await fixture.Workspace.AnalyzeContinuityAsync(project.Id, revisionId);
+        var conflict = Assert.Single(report.Conflicts);
+
+        Assert.Equal(revisionId, report.RevisionId);
+        Assert.Equal(project.Id, report.ProjectId);
+        Assert.Equal("character.mina.hometown", conflict.FactId);
+        Assert.Equal(
+            new[] { "character.protagonist", "world" },
+            conflict.Claims.Select(claim => claim.DocumentId).ToArray());
+        Assert.Equal(
+            new[] { "山あいの町", "海辺の町" },
+            conflict.Claims.Select(claim => claim.Value.GetValue<string>()).ToArray());
+        Assert.Equal(revisionId, (await fixture.Workspace.GetProjectAsync(project.Id)).BranchHeads["main"]);
+    }
+
+    [Fact]
+    public async Task ContinuityCheckIgnoresMatchingAndUnsharedFacts()
+    {
+        await using var fixture = await WorkspaceFixture.CreateAsync();
+        var documents = fixture.Documents
+            .Select(document => document.Id is "world" or "character.protagonist"
+                ? WithContinuityFact(document, "character.mina.name", "ミナ")
+                : document)
+            .Select(document => document.Id == "world"
+                ? WithContinuityFact(document, "world.rainfall", "記憶の中だけで降る")
+                : document)
+            .ToList();
+        var project = await fixture.Workspace.CreateProjectAsync("Consistent continuity", documents);
+
+        var report = await fixture.Workspace.AnalyzeContinuityAsync(project.Id, project.BranchHeads["main"]);
+
+        Assert.Empty(report.Conflicts);
+    }
+
+    [Fact]
     public async Task CharacterChangeReusesBackgroundAndInvalidatesOnlyDependents()
     {
         await using var fixture = await WorkspaceFixture.CreateAsync();
@@ -487,5 +533,18 @@ public sealed class BackendMvpTests
 
             return ValueTask.CompletedTask;
         }
+    }
+
+    private static DocumentDefinition WithContinuityFact(DocumentDefinition document, string factId, string value)
+    {
+        var content = JsonNode.Parse(document.Content.ToJsonString())!.AsObject();
+        if (content["continuity"] is not JsonObject continuity)
+        {
+            continuity = new JsonObject();
+            content["continuity"] = continuity;
+        }
+
+        continuity[factId] = value;
+        return document with { Content = content };
     }
 }

@@ -5,6 +5,7 @@
 ## 現在できること
 
 - TOML定義の検証・保存、リビジョンとストーリーブランチの管理
+- 定義間で明示された設定値の食い違いを検出する連続性チェック
 - 承認後の漫画向け概念候補グラフを、本編とは分けて保存
 - 変更案の提出・承認、変更範囲に応じたモック生成とキャッシュ再利用
 - CLIとREST APIによる操作
@@ -18,6 +19,7 @@
 ```sh
 dotnet build MangaPipeline.slnx
 dotnet run --project src/MangaPipeline.Cli -- validate samples/one-page
+dotnet run --project src/MangaPipeline.Cli -- check-continuity samples/one-page
 dotnet run --project src/MangaPipeline.Cli -- create "My Manga" path/to/definitions
 dotnet test MangaPipeline.slnx
 dotnet run --project src/MangaPipeline.Api
