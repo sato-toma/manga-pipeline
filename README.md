@@ -29,6 +29,7 @@ dotnet run --project src/MangaPipeline.Api
 
 - [開発・API操作・保存のガイド](./docs/development.md)
 - [中間データフローと設計方針](./docs/backend-data-flow.md)
+- [LLM対話・プロバイダー切替の設計案](./docs/decisions/0001-stateless-ai-authoring.md)
 - [公開前必須チェックリスト](./PRE_RELEASE_CHECKLIST.md)
 
 APIはローカル専用です。認証がないため、LANやインターネットへ公開しないでください。
