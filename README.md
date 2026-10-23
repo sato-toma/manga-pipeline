@@ -8,9 +8,10 @@
 - 定義間で明示された設定値の食い違いを検出する連続性チェック
 - 承認後の漫画向け概念候補グラフを、本編とは分けて保存
 - 変更案の提出・承認、変更範囲に応じたモック生成とキャッシュ再利用
+- GGUFモデルを別途指定して動かす、LLamaSharpローカル推論ワーカー
 - CLIとREST APIによる操作
 
-生成はモックです。LLMとの対話・概念案の自動作成、実画像生成、音声入力、モバイルアプリ、リモート認証は未実装です。
+生成はモックです。LLM推論ワーカーは追加しましたが、作品APIとの対話・変更案作成フロー、実画像生成、音声入力、モバイルアプリ、リモート認証は未実装です。
 
 ## はじめる
 
@@ -30,6 +31,7 @@ dotnet run --project src/MangaPipeline.Api
 - [開発・API操作・保存のガイド](./docs/development.md)
 - [中間データフローと設計方針](./docs/backend-data-flow.md)
 - [LLM対話・プロバイダー切替の設計案](./docs/decisions/0001-stateless-ai-authoring.md)
+- [ローカル推論ワーカーの起動と分離](./docs/local-inference-worker.md)
 - [公開前必須チェックリスト](./PRE_RELEASE_CHECKLIST.md)
 
 APIはローカル専用です。認証がないため、LANやインターネットへ公開しないでください。

@@ -28,13 +28,14 @@ This is a design proposal, not a claim that an LLM provider or authoring endpoin
 
 Research checked against primary documentation on 2026-10-22. Prices, quotas, model availability, and terms can change; recheck them before enabling a provider. This summary is not legal advice.
 
-NuGet registry lookup on 2026-10-22 found `LLamaSharp` and its CPU/CUDA 12 backends at 0.30.0, `Microsoft.ML.OnnxRuntimeGenAI` at 0.18.0, and `Microsoft.Extensions.AI` at 10.11.0.
+NuGet registry lookup on 2026-10-22 found `LLamaSharp` and its CPU/CUDA 12 backends at 0.30.0, `Microsoft.ML.OnnxRuntimeGenAI` at 0.18.0, and `Microsoft.Extensions.AI` at 10.11.0. On 2026-10-23, the selected first worker implementation uses LLamaSharp 0.30.0 with its CPU backend package. The package and model files are separate; model selection and licensing remain open.
 
 | Option | Cost and data handling | Assessment |
 |---|---|---|
 | LLamaSharp NuGet runtime | LLamaSharp 0.30.0 and CPU/CUDA/Vulkan backend packages are distributed via NuGet. The runtime uses native llama.cpp libraries and loads GGUF model weights from a separate file; weights are not the NuGet package and have their own license. No per-request cloud charge, but local compute and storage are required. | Strong .NET candidate. Put it in a separate restricted worker, not the API process, if isolation is a goal. Confirm the selected model's GGUF availability, Japanese quality, output-format control, native backend compatibility, and license. |
+| Node.js `node-llama-cpp` / `local-llm` | npm packages provide local native inference bindings and require separately provisioned model files. The current `node-llama-cpp` package advertises prebuilt Windows, Linux, and macOS binaries; `local-llm` is a separate package/project. | Viable Node.js alternatives, but add a second application runtime to this .NET repository. They do not provide isolation by themselves. Keep them as comparison candidates rather than the first implementation. |
 | llama.cpp server in an OCI container | The upstream llama.cpp project provides a local OpenAI-compatible server, GGUF support, quantization, several hardware backends, and CPU/GPU hybrid inference. Package the server binary in an OCI image; provision model weights separately and read-only. | Recommended first isolation prototype for a single local worker. It avoids loading native inference libraries into the API process and provides a simple HTTP boundary. Build/pin the image and restrict the container network, mounts, user, and resources. |
-| ONNX Runtime GenAI NuGet runtime | `Microsoft.ML.OnnxRuntimeGenAI` 0.18.0 provides .NET/C# inference for separately supplied ONNX model files. The official `generate()` API documentation currently labels the API preview and subject to change. | Candidate if a suitable ONNX export exists. Preview status and model/export compatibility make it a secondary prototype candidate until validated. |
+| ONNX Runtime GenAI NuGet runtime | `Microsoft.ML.OnnxRuntimeGenAI` 0.18.0 provides .NET/C# inference for separately supplied ONNX model files and depends on ONNX Runtime 1.31.0. The official `generate()` API documentation labels the API preview and subject to change. | Candidate if a suitable ONNX export exists. Preview status and model/export compatibility make it a secondary prototype candidate until validated. |
 | Microsoft.Extensions.AI | `Microsoft.Extensions.AI` 10.11.0 provides common .NET abstractions for AI services. | Useful for provider-neutral APIs, but it is not itself a local inference engine or an isolation boundary. |
 | Ollama in an OCI container | Ollama publishes a container image and documents CPU and GPU deployment. Its local service exposes an HTTP API; model weights remain separate data. | Convenient for local model management and a useful comparison. The image/container provides the isolation boundary only when configured accordingly; Ollama itself is a runtime, not a VM or container. Do not confuse Ollama Cloud with local inference. |
 | vLLM in an OCI container | vLLM publishes an OpenAI-compatible serving image and supports model serving from Hugging Face formats with accelerator-aware container deployment. | Consider for multi-user throughput or models/features better supported by its ecosystem. It is a larger Python/PyTorch serving stack and is not the default for a lightweight local single-worker deployment. Confirm hardware and model support first. |
@@ -42,6 +43,23 @@ NuGet registry lookup on 2026-10-22 found `LLamaSharp` and its CPU/CUDA 12 backe
 | Gemini API with billing enabled | Google's terms say prompts and responses are not used to improve products for Paid Services. They may still be logged for safety/legal purposes for a limited period and may be stored transiently or cached in any country where Google or its agents operate. Charges and quotas apply. | A possible opt-in cloud mode when the author accepts external processing and billing. It is not a free/private alternative. |
 
 NuGet packages distribute managed assemblies and, where applicable, native inference backends; they do not create a virtual machine, container, or OS sandbox. They also do not generally bundle multi-gigabyte model weights. Pin and verify the package versions, native backend, model source, model hash, and model-specific license separately.
+
+### Microsoft Phi-4-mini ONNX candidate review (2026-10-23)
+
+Microsoft publishes an official [Phi-4-mini-instruct ONNX export](https://huggingface.co/microsoft/Phi-4-mini-instruct-onnx), including a CPU int4 configuration at `cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4`. The repository declares MIT and provides a [Microsoft license file](https://huggingface.co/microsoft/Phi-4-mini-instruct-onnx/blob/main/LICENSE). At repository revision `fc04c8f93df696602fd9f300a30d1bf2e3081347`, the model weights are split between:
+
+| File | Size | Repository SHA-256 |
+|---|---:|---|
+| `model.onnx` | 52,118,230 bytes | `701aa5d185b6a782bc27104a990dd5b634fa507840b7c42f7ee6f1fb812d0b83` |
+| `model.onnx.data` | 4,856,573,952 bytes | `cb0267fa60befa1a4ade8c98b6d32a3d67f51abbd307c7f793f132e8d9092131` |
+
+These hashes are repository metadata and have not been verified against locally downloaded files. The ONNX file listing did not include per-file Protect AI or VirusTotal results, so artifact scanning remains unverified. The official model card describes the export as an ONNX Runtime model for CPU and other platforms.
+
+The C# API supports applying a chat template through `Tokenizer.ApplyChatTemplate` and constrained generation with JSON Schema through `GeneratorParams.SetGuidance("json_schema", schema)`. However, the official C# API documentation labels the generate API as preview and subject to change. Package 0.18.0 was published on 2026-10-14, but this repository has not built or run that package against the model. ONNX is therefore a plausible official-source alternative to the current third-party GGUF, not an approved runtime change. It would require a worker-runtime migration and separate integrity, security, Japanese-output, resource, and offline-isolation validation.
+
+Ollama's local API does not require an account or authentication. Local models can run without an API key; sign-in and an API key apply to cloud use and direct requests to Ollama's hosted API. The local API is unauthenticated, so keep it loopback-only and never expose it as a network service.
+
+WSL2 is available as a Linux execution environment, but it is not a ready-made application sandbox: Windows drives may be mounted into the distro and networking is enabled by default. A dedicated distro, restricted Linux account, disabled unneeded Windows integration, loopback-only worker, and explicitly enforced outbound network policy are needed before treating it as an isolation boundary. WSL2 configuration and firewall policy are host-level concerns and must be verified on the target deployment.
 
 If execution must be confined to an environment, use a worker boundary. NuGet is suitable for delivering a .NET worker's inference runtime, but is not itself the isolation mechanism. For an OCI deployment, the runtime can instead be a model server image:
 
@@ -56,7 +74,7 @@ restricted local inference worker / OCI container
 
 The worker should not mount the project workspace or secrets, should have no outbound network access, and should have explicit memory/CPU limits. Permit only the private IPC or inbound worker endpoint needed by the API. The API must not control a privileged container daemon using caller-provided parameters. A separate process without OS restrictions is not sufficient isolation. Containers use OS-level mechanisms and are not equivalent to VMs; mount, network, privilege, and daemon-access choices determine much of the boundary. GPU access and native backend compatibility must be verified in the target deployment.
 
-For the first local proof of concept, compare `llama.cpp` server in a restricted container with a small LLamaSharp-based worker. Keep the worker protocol model-neutral so Ollama or vLLM can be substituted without changing the authoring API. Do not assume every model distributed by any runtime has the same license or data behavior.
+The first implementation is a dedicated LLamaSharp worker running in WSL2, selected to keep the inference stack .NET-native while separating native model loading from the API process. Its HTTP interface binds to loopback and accepts bounded, stateless role/content histories. The worker's runtime boundary is implemented, but WSL filesystem and outbound-network restrictions must still be set up and verified outside the application. The model remains a separately provisioned GGUF file. Keep the contract provider-neutral so an OCI `llama.cpp` server, Ollama, or another runtime can be compared without changing the authoring API.
 
 The Gemini API terms also restrict use to professional or business purposes, require API users to be at least 18, and prohibit making an API client available through a service directed to or likely to be accessed by people under 18. If the product's audience or distribution changes, reassess provider eligibility before enabling Gemini.
 
@@ -182,7 +200,7 @@ The client may select only an enabled provider class. It must not supply an arbi
 
 ## Implementation sequence
 
-1. **Runtime and isolation proof**: compare `llama.cpp` server in an OCI container with a LLamaSharp worker using one approved local model. Evaluate Ollama as a convenience alternative and vLLM only if its serving scale or model support is needed. Verify native backend compatibility, model licensing, Japanese quality, resource use, and worker isolation. Do not add inference packages to the API project before choosing the worker boundary.
+1. **Runtime and isolation proof**: implement and run the dedicated LLamaSharp worker in WSL2 with one approved local model. Configure the restricted WSL account, filesystem access, loopback connection, and outbound firewall policy; verify Japanese quality, resource use, cancellation, and isolation. Compare an OCI `llama.cpp` worker only if the LLamaSharp/WSL setup does not meet the requirements. Do not add inference packages to the API project.
 2. **Provider settings and boundary**: typed configuration, allowlist, secret loading, provider-neutral request/result types, worker readiness without exposing credentials.
 3. **Stateless conversation API**: input bounds, transcript validation, revision-grounded context builder, structured response schema, clarification-only path.
 4. **Proposal generation**: typed document proposals, local validation, deterministic before/after preview, no persistence.
@@ -196,7 +214,7 @@ Do not start chat/voice/mobile UI work until the conversation state transitions,
 
 - Switching `local`/`cloud` changes only the provider adapter; the same request and response schema is used.
 - The first release only proposes changes against an existing revision; it does not claim to bootstrap a new project from an idea.
-- The local model runs in the selected restricted worker, not in the API process; it cannot read the workspace or secrets and cannot reach external networks during inference.
+- The local model runs in the selected restricted worker, not in the API process; deployment verification must show it cannot read the workspace or secrets and cannot reach external networks during inference.
 - With only the local provider configured, no authoring request makes an outbound model-provider call.
 - Cloud turns require an explicit public/synthetic classification; unpublished/private work is rejected for the unpaid cloud provider.
 - With only a provider disabled or unavailable, the request returns a clear error and does not fall back.
@@ -211,8 +229,8 @@ Do not start chat/voice/mobile UI work until the conversation state transitions,
 ## Open decisions before implementation
 
 - Maximum transcript/context size and the client-side history compaction policy.
-- Worker isolation mechanism: OCI container versus a separately sandboxed OS process, including the target environment's GPU/native-library support.
-- Initial local runtime: `llama.cpp` server container versus LLamaSharp NuGet worker; decide after the isolation and model-format proof of concept.
+- Whether WSL2 plus host firewall and filesystem restrictions provides sufficient isolation, or whether an OCI container/VM is required.
+- Whether LLamaSharp's native backend and target environment support the selected model and Japanese output quality.
 - Exact model artifact, format, source, hash, license, and provisioning/update process.
 - Whether to expose provider choice on every API request or only through a project/client setting; either way, cloud use must be visible and local remains the default.
 - Eligibility for a paid cloud tier, if confidential cloud processing is later requested.

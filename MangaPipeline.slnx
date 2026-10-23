@@ -3,6 +3,7 @@
     <Project Path="src/MangaPipeline.Api/MangaPipeline.Api.csproj" />
     <Project Path="src/MangaPipeline.Cli/MangaPipeline.Cli.csproj" />
     <Project Path="src/MangaPipeline.Core/MangaPipeline.Core.csproj" />
+    <Project Path="src/MangaPipeline.InferenceWorker/MangaPipeline.InferenceWorker.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/MangaPipeline.Tests/MangaPipeline.Tests.csproj" />

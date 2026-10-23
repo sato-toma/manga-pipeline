@@ -25,6 +25,7 @@
   <ItemGroup>
     <ProjectReference Include="../../src/MangaPipeline.Core/MangaPipeline.Core.csproj" />
     <ProjectReference Include="../../src/MangaPipeline.Api/MangaPipeline.Api.csproj" />
+    <ProjectReference Include="../../src/MangaPipeline.InferenceWorker/MangaPipeline.InferenceWorker.csproj" />
   </ItemGroup>
 
 </Project>
